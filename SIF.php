@@ -114,7 +114,7 @@ class SIF {
             $action->actionName = $this->actionName;
             $action->actionChain = $this->actionChain;
             $action->init();
-            $action->logMessage('Action ' . $this->actionName . ': intialized');
+            $action->logMessage('intialized');
 
             // If this is a chained action carry the user vars over
             if (isset($userData)) {
@@ -125,7 +125,7 @@ class SIF {
             // This is meant to be implemented in BaseAction for global logic, such as authentication on all pages.
             // This function will only be called once, regardless of how many actions are chained.
             if ($startCalled === false and is_callable([$action, 'start'])) {
-                $action->logMessage('Action ' . $this->actionName . ': calling start function');
+                $action->logMessage('calling start');
                 $result = $action->start();
                 $startCalled = true;
 
@@ -143,7 +143,7 @@ class SIF {
 
             // Call the logic function if it exists
             if (is_callable([$action, 'logic'])) {
-                $action->logMessage('Action ' . $this->actionName . ': calling logic function');
+                $action->logMessage('calling logic');
                 $result = $action->logic($args);
 
                 // If the logic function returns a new action we loop and run it.
@@ -160,14 +160,15 @@ class SIF {
 
             // Call the view function if it exists
             if (is_callable([$action, 'view'])) {
-                $action->logMessage('Action ' . $this->actionName . ': calling view function');
+                $action->logMessage('calling view');
                 $action->view($args);
             }
 
-            // Call the stop function if it exists
-            // This is meant to be implemented only in BaseAction for global teardown logic, such as a db disconnect.
+            // Call the stop function if it exists.
+            // This is meant to be implemented only in BaseAction for global tear down logic,
+            // such as a db disconnect.
             if (is_callable([$action, 'stop'])) {
-                $action->logMessage('Action ' . $this->actionName . ': calling stop function');
+                $action->logMessage('calling stop');
                 $action->stop($args);
             }
 
@@ -470,9 +471,17 @@ class SIFBaseAction {
         }
         
         // Format and write
-        $msg = $_SERVER['REMOTE_ADDR'] . ' [' . date('r') . '] "' .
-               $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . ' ' .
-               $_SERVER['SERVER_PROTOCOL'] . '" ' . $msg . "\n";
+        $msg = sprintf(
+            "%s [%s] \"%s %s %s\" Action %s: %s\n",
+            $_SERVER['REMOTE_ADDR'],
+            date('r'),
+            $_SERVER['REQUEST_METHOD'],
+            $_SERVER['REQUEST_URI'],
+            $_SERVER['SERVER_PROTOCOL'],
+            $this->actionName,
+            $msg
+        );
+
         fwrite($this->log, $msg);
 
         return true;
