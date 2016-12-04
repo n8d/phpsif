@@ -88,7 +88,23 @@ class SIF {
         // Initialize the found action and run its logic and view functions.
         // Keep looping until an action returns nothing, meaning we're done.
         while (true) {
-            require_once $this->actionDir . $this->actionName . '.class.php';
+            
+            // Support a couple different class file names
+            $includes = [
+                $this->actionDir . $this->actionName . '.class.php',
+                $this->actionDir . $this->actionName . '.php',
+            ];
+            $included = false;
+            foreach ($includes as $include) {
+                if (is_file($include)) {
+                    require_once $include;
+                    $included = true;
+                    break;
+                }
+            }
+            if (!$included) {
+                throw new Exception("Unable to find action file for {$this->actionName}.");
+            }
             
             // Init and setup action
             $action = new $this->actionName;
