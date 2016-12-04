@@ -249,51 +249,51 @@ class SIF {
 
                     switch ($type) {
 
-                    // preg_match() against a server variable
-                    case 'pre':
-                    case 'hpr':
+                        // preg_match() against a server variable
+                        case 'pre':
+                        case 'hpr':
 
-                        // HTTP_HOST
-                        if ($type == 'hpr') {
-                            $check = $_SERVER['HTTP_HOST'];
+                            // HTTP_HOST
+                            if ($type == 'hpr') {
+                                $check = $_SERVER['HTTP_HOST'];
 
-                        // REQUEST_URI
-                        } else {
-                            if (array_key_exists('matchDecodeUri', $config) and $config['matchDecodeUri'] === true) {
-                                $check = $checkUriDecoded;
+                            // REQUEST_URI
                             } else {
-                                $check = $checkUri;
+                                if (array_key_exists('matchDecodeUri', $config) and $config['matchDecodeUri'] === true) {
+                                    $check = $checkUriDecoded;
+                                } else {
+                                    $check = $checkUri;
+                                }
                             }
-                        }
 
-                        if (preg_match($data, $check, $newargs)) {
-                            $matches++;
-                        }
+                            if (preg_match($data, $check, $newargs)) {
+                                $matches++;
+                            }
 
-                        break;
+                            break;
 
-                    // $_GET
-                    case 'get':
-                        if (isset($_GET[$data])) {
-                            $matches++;
-                            $newargs = $_GET;
-                        }
+                        // $_GET
+                        case 'get':
+                            if (isset($_GET[$data])) {
+                                $matches++;
+                                $newargs = $_GET;
+                            }
 
-                        break;
+                            break;
 
-                    // $_POST
-                    case 'pos':
-                        if (isset($_POST[$data])) {
-                            $matches++;
-                            $newargs = $_POST;
-                        }
+                        // $_POST
+                        case 'pos':
+                            if (isset($_POST[$data])) {
+                                $matches++;
+                                $newargs = $_POST;
+                            }
 
-                        break;
+                            break;
 
-                    // Default match
-                    case 'def':
-                        $defaultAction = $config['name'];
-                        break;
+                        // Default match
+                        case 'def':
+                            $defaultAction = $config['name'];
+                            break;
                     }
 
                     // If in OR mode, support just one set of arguments
