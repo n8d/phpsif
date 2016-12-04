@@ -73,6 +73,8 @@ class SIF {
 
     /**
      * Run SIF. No walking allowed.
+     * 
+     * @throws Exception
      */
     function run() {
         $startCalled = false;
@@ -164,7 +166,7 @@ class SIF {
         }
 
         if (!is_dir($this->actionDir)) {
-            $this->fatalError('Action directory does not exist.');
+            throw new Exception("Action directory does not exist.");
         }
 
         // Check cache
@@ -177,7 +179,7 @@ class SIF {
             $files = scandir($this->actionDir);
 
             if (!is_array($files) or count($files) < 1) {
-                $this->fatalError('No actions found.');
+                throw new Exception("No actions found.");
             }
 
             foreach ($files as $file) {
@@ -312,17 +314,9 @@ class SIF {
             return [];
         }
 
-        $this->fatalError('No actions matched.');
+        throw new Exception("No actions matched.");
     }
 
-    /**
-     * Print a fatal error message and exit.
-     * 
-     * @param $msg string
-     */
-    public function fatalError($msg) {
-        die($msg);
-    }
 }
 
 
@@ -332,35 +326,72 @@ class SIF {
  * Base SIF action for extending in every other action.
  */
 class SIFBaseAction {
+    
+    /**
+     * Whether to enable basic SIF logging.
+     * 
+     * @var bool
+     */
     public $logEnable = false;
+
+    /**
+     * SIF log file full path.
+     * 
+     * @var null|string
+     */
     public $logFile = null;
     
-    public $actionName;
-    public $actionChain;
-    public $config;
-    public $userData = array();
+    /**
+     * Log resource.
+     * 
+     * @var resource
+     */
     protected $log;
+
+    /**
+     * Name of the active action.
+     * 
+     * @var string
+     */
+    public $actionName;
+
+    /**
+     * Array of actions we have chained through.
+     * 
+     * @var array
+     */
+    public $actionChain = [];
+
+    /**
+     * Array of action configuration.
+     * 
+     * @var array
+     */
+    public $config;
+
+    /**
+     * Array of user data to be used in the view.
+     * 
+     * @var array
+     */
+    public $userData = array();
 
     /**
      * SIF constructor
      */
-    public function __construct() {
-        
-    }
+    public function __construct() { }
 
     /**
-     * Init logic, called with every action chain. Use start() for logic that should be called just once.
+     * Init logic, called with every action chain.
+     * Use start() for logic that should be called just once.
      */
-    function init() {
-        // Logging
-        if ($this->logEnable and $this->logFile !== null) {
-            $this->log = @fopen($this->logFile, 'a');
+    function init() { }
 
-            if (!$this->log) {
-                $this->fatalError('Unable to open log file for writing.');
-            }
-        }
-    }
+    /**
+     * Start logic, called just once per request.
+     * If multiple actions are chained this is called on the first one.
+     */
+    function start() { }
 
     /**
      * Set a page meta variable so it shows up in the pageData object in javascript.
@@ -402,112 +433,33 @@ class SIFBaseAction {
     }
 
     /**
-     * Log a message to the SIF log. Deprecated for other loggers like UPLog.
+     * Log a message to the SIF log.
      * 
      * @param string $msg
-     * @return bool True on successful write or false otherwise
+     * @throws Exception
+     * @return bool 
      */
     function logMessage($msg) {
-        if ($this->logEnable) {
-            $msg = $_SERVER['REMOTE_ADDR'] . ' [' . date('r') . '] "' .
-                   $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . ' ' .
-                   $_SERVER['SERVER_PROTOCOL'] . '" ' . $msg . "\n";
-            fwrite($this->log, $msg);
+        if (!$this->logEnable) {
+            return false;
         }
+            
+        // Open if needed
+        if (!is_resource($this->log)) {
+            $this->log = @fopen($this->logFile, 'a');
+
+            if (!$this->log) {
+                throw new Exception("Unable to open log file for writing.");
+            }
+        }
+        
+        // Format and write
+        $msg = $_SERVER['REMOTE_ADDR'] . ' [' . date('r') . '] "' .
+               $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . ' ' .
+               $_SERVER['SERVER_PROTOCOL'] . '" ' . $msg . "\n";
+        fwrite($this->log, $msg);
 
         return true;
-    }
-
-    /**
-     * Throw an HTTP 503 with the given message.
-     * 
-     * @param string $msg
-     */
-    function fatalError($msg) {
-        header('HTTP/1.1 503 Service Temporarily Unavailable');
-        die($msg);
-    }
-   
-    /**
-     * Send a 301 redirect header to the specified URL and exit.
-     * 
-     * @param string $url
-     */
-    function redirect($url) {
-
-        // Don't cache redirects
-        $this->setCacheHeaders(false);
-        
-        // Send 301 headers
-        header('HTTP/1.1 301 Moved Permanently');
-        header('Location: ' . $url);
-        
-        exit;
-    }
-        /**
-     * Set HTTP response cache headers.
-     * 
-     * @param bool $cache Whether to enable caching (true) or not (false).
-     * @param string $last_mod Last modified time
-     * @param int $ttl Cache time to live in seconds
-     */
-    public function setCacheHeaders($cache = false, $last_mod = '', $ttl = '') {
-        $tz_offset = date('Z') * -1;
-        $time_now = time();
-        $time_def = time();
-        $ttl_def = 43200;
-
-        // Default to caching off
-        if ($cache != true) {
-            $cache = false;
-        }
-
-        // If last modified time is empty, use default time
-        if ($last_mod == '') {
-            $last_mod = $time_def;
-        } elseif (!is_numeric($last_mod)) {
-            $last_mod = strtotime($last_mod);
-        }
-
-        // If last modified time is invalid or before the default, use the default
-        if (!preg_match('/^\d{10}$/', $last_mod) or $last_mod < $time_def) {
-            $last_mod = $time_def;
-        }
-
-        // Set LM and save it for use in the templates
-        header('Last-Modified: ' . date('D, d M Y H:i:s', $last_mod + $tz_offset) . ' GMT');
-        $this->setUserVar('cache_last_mod', $last_mod);
-
-        // Caching enabled
-        if ($cache == true) {
-
-            // If TTL is empty use default
-            if ($ttl == '' or !is_numeric($ttl)) {
-                $ttl = $ttl_def;
-            }
-
-            header_remove('Pragma');
-            header('Cache-Control: public, max-age=' . $ttl);
-            header('Expires: ' . date('D, d M Y H:i:s', $time_now + $ttl + $tz_offset) . ' GMT');
-
-            // Handle IMS header
-            if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
-                $ims_time = strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']);
-
-                if ($ims_time != -1) {
-                    if ($last_mod < $ims_time) {
-                        header('HTTP/1.1 304 Not Modified');
-                        exit;
-                    }
-                }
-            }
-
-            // Caching disabled
-        } else {
-            header('Pragma: no-cache');
-            header('Expires: Thu, 19 Nov 1981 08:52:00 GMT');
-            header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
-        }
     }
 }
 
