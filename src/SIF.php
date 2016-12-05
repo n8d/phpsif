@@ -1,10 +1,12 @@
 <?php
-
-// CVS keyword left for nostalgia purposes, because CVS was the bomb.
-// $Id: SIF.class.php,v 1.14 2007/06/06 18:16:08 nate Exp $
-
 /**
- * Class SIF Main routing class
+ * PHP Simple Framework, or SIF, or maybe SiF, is a nano-size framework with just the basics.
+ *
+ * @link https://github.com/n8d/phpsif
+ * @license MIT
+ * 
+ * CVS keyword left for nostalgia, because CVS was the bomb.
+ * $Id: SIF.class.php,v 1.14 2007/06/06 18:16:08 nate Exp $
  */
 class SIF {
     
