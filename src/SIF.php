@@ -78,7 +78,7 @@ class SIF {
      * 
      * @throws Exception
      */
-    function run() {
+    public function run() {
         $startCalled = false;
 
         // Make sure BaseAction is included first so other actions can extend it.
@@ -179,7 +179,7 @@ class SIF {
     }
 
     // Step through the available actions and look for a match.
-    function findActionMatch() {
+    private function findActionMatch() {
         if ($this->cacheEnable) {
             $cacheFile = $this->cacheDir . 'sif/configs.cache';
         }
@@ -404,13 +404,13 @@ class SIFBaseAction {
      * Init logic, called with every action chain.
      * Use start() for logic that should be called just once.
      */
-    function init() { }
+    public function init() { }
 
     /**
      * Start logic, called just once per request.
      * If multiple actions are chained this is called on the first one.
      */
-    function start() { }
+    public function start() { }
 
     /**
      * Set a page meta variable so it shows up in the pageData object in javascript.
@@ -431,7 +431,7 @@ class SIFBaseAction {
      * @param string $name
      * @return mixed Value if variable exists, or false otherwise.
      */
-    function getUserVar($name) {
+    public function getUserVar($name) {
         if (isset($this->userData[$name])) {
             return $this->userData[$name];
         }
@@ -446,7 +446,7 @@ class SIFBaseAction {
      * @param mixed $value
      * @return bool True on success or false otherwise
      */
-    function setUserVar($name, $value) {
+    public function setUserVar($name, $value) {
         $this->userData[$name] = $value;
         return true;
     }
@@ -458,7 +458,7 @@ class SIFBaseAction {
      * @throws Exception
      * @return bool 
      */
-    function logMessage($msg) {
+    public function logMessage($msg) {
         if (!$this->logEnable) {
             return false;
         }
