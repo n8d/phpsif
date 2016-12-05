@@ -1,12 +1,19 @@
 <?php
 /**
- * PHP Simple Framework, or SIF, or maybe SiF, is a nano-size framework with just the basics.
+ * PHP Simple Framework, or SIF, or maybe SiF, is a nano-size framework that
+ * does just the basics.
  *
  * @link https://github.com/n8d/phpsif
  * @license MIT
  * 
  * CVS keyword left for nostalgia, because CVS was the bomb.
  * $Id: SIF.class.php,v 1.14 2007/06/06 18:16:08 nate Exp $
+ */
+
+/**
+ * Class SIF
+ * 
+ * Main SIF logic.
  */
 class SIF {
     
@@ -18,14 +25,16 @@ class SIF {
     public $actionDir = '../action/';
 
     /**
-     * Cache directory, for action config cache and such. Requires write access by web user.
+     * Cache directory, for action config cache and such.
+     * Requires write access by web user.
      * 
      * @var string
      */
     public $cacheDir = '../cache/sif/';
 
     /**
-     * Whether to enable action config caching. This can improve performance a lot, especially if there are many actions.
+     * Whether to enable action config caching.
+     * This can improve performance a lot, especially if there are many actions.
      * 
      * @var bool
      */
@@ -39,7 +48,8 @@ class SIF {
     public $logFile = '../log/sif.log';
 
     /**
-     * Whether to enable logging of SIF activity. Useful for development, but not recommended for production.
+     * Whether to enable logging of SIF activity.
+     * Useful for development, but not recommended for production.
      * 
      * @var bool
      */
@@ -423,7 +433,6 @@ class SIFBaseAction {
         $this->pageMetaData[$name] = $value;
         return true;
     }
-
 
     /**
      * Get a user (template) variable.
