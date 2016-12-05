@@ -92,7 +92,10 @@ class SIF {
         $startCalled = false;
 
         // Make sure BaseAction is included first so other actions can extend it.
-        require_once $this->actionDir . 'BaseAction.class.php';
+        $this->includeOne([
+            $this->actionDir . 'BaseAction.class.php',
+            $this->actionDir . 'BaseAction.php',
+        ]);
 
         // Look for a match
         $args = $this->findActionMatch();
@@ -100,21 +103,13 @@ class SIF {
         // Initialize the found action and run its logic and view functions.
         // Keep looping until an action returns nothing, meaning we're done.
         while (true) {
-            
+           
             // Support a couple different class file names
-            $includes = [
+            $res = $this->includeOne([
                 $this->actionDir . $this->actionName . '.class.php',
                 $this->actionDir . $this->actionName . '.php',
-            ];
-            $included = false;
-            foreach ($includes as $include) {
-                if (is_file($include)) {
-                    require_once $include;
-                    $included = true;
-                    break;
-                }
-            }
-            if (!$included) {
+            ]);
+            if ($res !== true) {
                 throw new Exception("Unable to find action file for {$this->actionName}.");
             }
             
@@ -186,6 +181,24 @@ class SIF {
 
             break;
         }
+    }
+
+    /**
+     * Given multiple files to include find the first that exists and include it.
+     * 
+     * @param array $includes
+     * @return bool
+     */
+    private function includeOne($includes) {
+        $included = false;
+        foreach ($includes as $include) {
+            if (is_file($include)) {
+                require_once $include;
+                $included = true;
+                break;
+            }
+        }
+        return $included;
     }
 
     // Step through the available actions and look for a match.
